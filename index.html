@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مرورگر حرفه‌ای - شبیه گوگل کروم</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, sans-serif;
+            background: #202124;
+            overflow: hidden;
+        }
+
+        /* نوار تب‌ها */
+        .tabs-bar {
+            background: #2d2e32;
+            display: flex;
+            gap: 2px;
+            padding: 8px 8px 0 8px;
+            border-bottom: 1px solid #3c4043;
+            overflow-x: auto;
+            overflow-y: hidden;
+            white-space: nowrap;
+        }
+
+        .tab {
+            background: #3c4043;
+            color: #e8eaed;
+            padding: 8px 20px;
+            border-radius: 8px 8px 0 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            position: relative;
+            min-width: 150px;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: #202124;
+            color: white;
+        }
+
+        .tab:hover {
+            background: #4a4d52;
+        }
+
+        .tab-title {
+            flex: 1;
+            font-size: 13px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .tab-close {
+            cursor: pointer;
+            font-size: 18px;
+            opacity: 0.7;
+        }
+
+        .tab-close:hover {
+            opacity: 1;
+        }
+
+        .new-tab-btn {
+            background: #3c4043;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+
+        .new-tab-btn:hover {
+            background: #4a4d52;
+        }
+
+        /* نوار ابزار */
+        .toolbar {
+            background: #202124;
+            padding: 12px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            border-bottom: 1px solid #3c4043;
+        }
+
+        button {
+            background: #3c4043;
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: #4a4d52;
+        }
+
+        #url-bar {
+            flex: 1;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 24px;
+            font-size: 14px;
+            background: #2d2e32;
+            color: white;
+            direction: ltr;
+            text-align: left;
+        }
+
+        #url-bar:focus {
+            outline: none;
+            background: #35373d;
+        }
+
+        /* ناوبری سریع (سایت‌های پرطرفدار) */
+        .quick-nav {
+            background: #202124;
+            padding: 8px 12px;
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            border-bottom: 1px solid #3c4043;
+        }
+
+        .quick-link {
+            background: #2d2e32;
+            color: #e8eaed;
+            padding: 6px 12px;
+            border-radius: 16px;
+            text-decoration: none;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        .quick-link:hover {
+            background: #4a4d52;
+        }
+
+        /* وضعیت */
+        .status {
+            background: #202124;
+            color: #9aa0a6;
+            padding: 4px 12px;
+            font-size: 12px;
+            border-top: 1px solid #3c4043;
+        }
+
+        /* فریم نمایش */
+        #browser-frame {
+            width: 100%;
+            height: calc(100vh - 140px);
+            border: none;
+            background: white;
+        }
+
+        /* صفحه اصلی (شبیه گوگل) */
+        .home-page {
+            position: fixed;
+            top: 140px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #202124;
+            display: none;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 80px;
+            overflow-y: auto;
+            z-index: 10;
+        }
+
+        .home-page.active {
+            display: flex;
+        }
+
+        .google-style {
+            text-align: center;
+        }
+
+        .google-logo {
+            font-size: 80px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #4285f4, #ea4335, #fbbc04, #34a853);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .search-box {
+            width: 500px;
+            padding: 15px 20px;
+            border: 1px solid #5f6368;
+            border-radius: 24px;
+            background: #2d2e32;
+            color: white;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #8ab4f8;
+        }
+
+        .home-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .home-buttons button {
+            background: #2d2e32;
+            padding: 10px 20px;
+        }
+
+        /* لودینگ */
+        .loading-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #8ab4f8;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- تب‌ها -->
+    <div class="tabs-bar" id="tabs-bar">
+        <div class="tab active" data-tab-id="0">
+            <span class="tab-title">تب جدید</span>
+            <span class="tab-close" onclick="event.stopPropagation(); closeTab(0)">×</span>
+        </div>
+        <button class="new-tab-btn" onclick="newTab()">+</button>
+    </div>
+
+    <!-- نوار ابزار -->
+    <div class="toolbar">
+        <button onclick="goBack()" title="بازگشت">←</button>
+        <button onclick="goForward()" title="بعدی">→</button>
+        <button onclick="refreshPage()" title="بازآوری">⟳</button>
+        <button onclick="goHome()" title="خانه">🏠</button>
+        <input type="text" id="url-bar" placeholder="جستجوی گوگل یا وارد کردن آدرس">
+        <div class="loading-spinner" id="loading-spinner"></div>
+    </div>
+
+    <!-- لینک‌های سریع -->
+    <div class="quick-nav">
+        <a href="#" class="quick-link" onclick="loadUrl('https://google.com'); return false;">🔍 گوگل</a>
+        <a href="#" class="quick-link" onclick="loadUrl('https://youtube.com'); return false;">📺 یوتیوب</a>
+        <a href="#" class="quick-link" onclick="loadUrl('https://github.com'); return false;">🐙 گیت‌هاب</a>
+        <a href="#" class="quick-link" onclick="loadUrl('https://wikipedia.org'); return false;">📚 ویکی‌پدیا</a>
+        <a href="#" class="quick-link" onclick="loadUrl('https://gmail.com'); return false;">📧 جیمیل</a>
+    </div>
+
+    <div class="status" id="status">✅ آماده</div>
+
+    <!-- صفحه اصلی شبیه گوگل -->
+    <div class="home-page" id="home-page">
+        <div class="google-style">
+            <div class="google-logo">🌐 مرورگر حرفه‌ای</div>
+            <input type="text" class="search-box" id="home-search" placeholder="جستجوی گوگل یا وارد کردن آدرس...">
+            <div class="home-buttons">
+                <button onclick="searchFromHome()">جستجوی گوگل</button>
+                <button onclick="navigateFromHome()">رفتن به آدرس</button>
+            </div>
+        </div>
+    </div>
+
+    <iframe id="browser-frame" src="about:blank" style="display: none;"></iframe>
+
+    <script>
+        // مدیریت تب‌ها
+        let tabs = [{ id: 0, title: 'تب جدید', url: 'about:blank' }];
+        let currentTab = 0;
+        let nextTabId = 1;
+
+        const frame = document.getElementById('browser-frame');
+        const urlInput = document.getElementById('url-bar');
+        const statusDiv = document.getElementById('status');
+        const homePage = document.getElementById('home-page');
+        const loadingSpinner = document.getElementById('loading-spinner');
+
+        function setStatus(text, isLoading = false) {
+            statusDiv.innerHTML = isLoading ? '⏳ ' + text : '✅ ' + text;
+            loadingSpinner.style.display = isLoading ? 'inline-block' : 'none';
+        }
+
+        function searchGoogle(query) {
+            const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+            loadUrl(searchUrl);
+        }
+
+        function loadUrl(url, tabId = currentTab) {
+            if (!url || url === '') {
+                homePage.classList.add('active');
+                frame.style.display = 'none';
+                setStatus('در صفحه اصلی');
+                return;
+            }
+
+            homePage.classList.remove('active');
+            frame.style.display = 'block';
+
+            if (url.includes('google.com') || url.includes('search')) {
+                // آدرس گوگل رو همونطوری بذار
+            } else if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                if (url.includes(' ') || (!url.includes('.') && !url.includes('com') && !url.includes('org'))) {
+                    searchGoogle(url);
+                    return;
+                }
+                url = 'https://' + url;
+            }
+
+            setStatus(`در حال بارگذاری: ${url}...`, true);
+            urlInput.value = url;
+            
+            if (tabs[tabId]) {
+                tabs[tabId].url = url;
+                tabs[tabId].title = url.replace(/^https?:\/\//, '').split('/')[0];
+                updateTabTitle(tabId);
+            }
+            
+            frame.src = url;
+        }
+
+        function updateTabTitle(tabId) {
+            const tab = document.querySelector(`.tab[data-tab-id="${tabId}"]`);
+            if (tab && tabs[tabId]) {
+                const titleSpan = tab.querySelector('.tab-title');
+                titleSpan.textContent = tabs[tabId].title || 'تب جدید';
+            }
+        }
+
+        function newTab() {
+            const tabId = nextTabId++;
+            tabs.push({ id: tabId, title: 'تب جدید', url: 'about:blank' });
+            
+            const tabsBar = document.getElementById('tabs-bar');
+            const newTabBtn = document.querySelector('.new-tab-btn');
+            
+            const tabDiv = document.createElement('div');
+            tabDiv.className = 'tab';
+            tabDiv.setAttribute('data-tab-id', tabId);
+            tabDiv.onclick = () => switchTab(tabId);
+            tabDiv.innerHTML = `
+                <span class="tab-title">تب جدید</span>
+                <span class="tab-close" onclick="event.stopPropagation(); closeTab(${tabId})">×</span>
+            `;
+            
+            tabsBar.insertBefore(tabDiv, newTabBtn);
+            switchTab(tabId);
+        }
+
+        function switchTab(tabId) {
+            currentTab = tabId;
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector(`.tab[data-tab-id="${tabId}"]`).classList.add('active');
+            
+            const tab = tabs.find(t => t.id === tabId);
+            if (tab) {
+                if (tab.url && tab.url !== 'about:blank') {
+                    frame.src = tab.url;
+                    urlInput.value = tab.url;
+                    homePage.classList.remove('active');
+                    frame.style.display = 'block';
+                } else {
+                    homePage.classList.add('active');
+                    frame.style.display = 'none';
+                    urlInput.value = '';
+                }
+            }
+        }
+
+        function closeTab(tabId) {
+            if (tabs.length === 1) {
+                newTab();
+            }
+            
+            const index = tabs.findIndex(t => t.id === tabId);
+            if (index !== -1) {
+                tabs.splice(index, 1);
+                const tabElement = document.querySelector(`.tab[data-tab-id="${tabId}"]`);
+                tabElement.remove();
+                
+                if (currentTab === tabId) {
+                    switchTab(tabs[0].id);
+                }
+            }
+        }
+
+        function goBack() {
+            try {
+                frame.contentWindow.history.back();
+            } catch(e) {
+                setStatus('❌ نمی‌توان به عقب رفت');
+            }
+        }
+
+        function goForward() {
+            try {
+                frame.contentWindow.history.forward();
+            } catch(e) {
+                setStatus('❌ نمی‌توان به جلو رفت');
+            }
+        }
+
+        function refreshPage() {
+            try {
+                frame.contentWindow.location.reload();
+                setStatus('صفحه بازآوری شد...');
+            } catch(e) {
+                if (tabs[currentTab] && tabs[currentTab].url) {
+                    loadUrl(tabs[currentTab].url);
+                }
+            }
+        }
+
+        function goHome() {
+            homePage.classList.add('active');
+            frame.style.display = 'none';
+            setStatus('صفحه اصلی');
+            urlInput.value = '';
+            if (tabs[currentTab]) {
+                tabs[currentTab].url = 'about:blank';
+            }
+        }
+
+        function navigate() {
+            let url = urlInput.value.trim();
+            loadUrl(url);
+        }
+
+        function searchFromHome() {
+            const query = document.getElementById('home-search').value;
+            if (query) {
+                searchGoogle(query);
+            }
+        }
+
+        function navigateFromHome() {
+            let url = document.getElementById('home-search').value;
+            if (url) {
+                loadUrl(url);
+            }
+        }
+
+        urlInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                navigate();
+            }
+        });
+
+        frame.onload = function() {
+            setStatus('بارگذاری کامل شد');
+            try {
+                if (frame.contentWindow.location.href !== 'about:blank') {
+                    const currentUrl = frame.contentWindow.location.href;
+                    urlInput.value = currentUrl;
+                    if (tabs[currentTab]) {
+                        tabs[currentTab].url = currentUrl;
+                        tabs[currentTab].title = currentUrl.replace(/^https?:\/\//, '').split('/')[0];
+                        updateTabTitle(currentTab);
+                    }
+                }
+            } catch(e) {
+                console.log('Cannot access iframe URL due to CORS');
+            }
+        };
+
+        // صفحه اصلی رو نشون بده
+        homePage.classList.add('active');
+        frame.style.display = 'none';
+    </script>
+</body>
+</html>
